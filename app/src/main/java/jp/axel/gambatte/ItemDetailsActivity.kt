@@ -4,13 +4,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
+import jp.axel.gambatte.dialogs.TTSErrorDialog
 import java.io.InputStreamReader
 import java.util.Locale
 
@@ -33,6 +33,8 @@ class ItemDetailsActivity : AppCompatActivity() {
     private lateinit var stopBtn: MaterialButton
     private lateinit var previousBtn: MaterialButton
     private lateinit var actionsLayout: LinearLayout
+    private var speakDelay = 1000L
+    private lateinit var handler: Handler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +47,7 @@ class ItemDetailsActivity : AppCompatActivity() {
         previousBtn = findViewById(R.id.btn_previous)
         stopBtn = findViewById(R.id.stop_btn)
         actionsLayout = findViewById(R.id.actions_layout)
+        handler = Handler(mainLooper)
 
         nextBtn.setOnClickListener { next() }
         previousBtn.setOnClickListener { previous() }
@@ -67,9 +70,10 @@ class ItemDetailsActivity : AppCompatActivity() {
                 stopPractice()
             }
             val list = mutableListOf<String>()
-            Utils.generateRandomNumbers(20.coerceAtMost(allItems.size), 0, allItems.lastIndex).forEach { number ->
-                list.add(allItems[number])
-            }
+            Utils.generateRandomNumbers(20.coerceAtMost(allItems.size), 0, allItems.lastIndex)
+                .forEach { number ->
+                    list.add(allItems[number])
+                }
             items = list
         } else {
             items = allItems
@@ -88,11 +92,11 @@ class ItemDetailsActivity : AppCompatActivity() {
                         override fun onDone(utteranceId: String?) {
                             if (utteranceId == SPEAK_ID_ENGLISH && practice) {
                                 if (itemIndex < items.lastIndex) {
-                                    Handler(mainLooper).postDelayed({
+                                    handler.postDelayed({
                                         next()
                                     }, 500)
                                 } else {
-                                    Handler(mainLooper).post {
+                                    handler.post {
                                         stopPractice()
                                     }
                                 }
@@ -105,11 +109,13 @@ class ItemDetailsActivity : AppCompatActivity() {
 
                     })
                 }
+                else
+                    TTSErrorDialog(this)
             }
+            else
+                TTSErrorDialog(this)
             loadItem()
         }
-
-
     }
 
     private fun loadItem() {
@@ -123,8 +129,11 @@ class ItemDetailsActivity : AppCompatActivity() {
 
             if (::textToSpeech.isInitialized) {
                 speakJapanese(name)
-                if (practice)
-                    speakEnglish(contents[1])
+                if (practice) {
+                    handler.postDelayed({
+                        speakEnglish(contents[1])
+                    }, speakDelay)
+                }
             }
         }
         indexTv.text = "${itemIndex + 1}/${items.size}"

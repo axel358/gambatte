@@ -5,4 +5,8 @@
     <string name="tab_text_2">Tab 2</string>
     <string name="vocabulary_list">Vocabulary list</string>
     <string name="kanji_list">Kanji list</string>
+    <string name="tts_error_title">Text to Speech error</string>
+    <string name="tts_error_message">The text to speech engine failed to initialize. Please make sure you have Google Speech Services installed and Japanese and English language data available</string>
+    <string name="install_tts">Install Google TTS</string>
+    <string name="manage_languages">Manage languages</string>
 </resources>
